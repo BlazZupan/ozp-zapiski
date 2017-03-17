@@ -1,0 +1,13 @@
+chapters=( "vecrazredna-klasifikacija" "izbor-znacilk" "projekcije" )
+# chapters=( "projekcije" )
+for i in "${chapters[@]}"
+do
+    j=${i%.tex};
+    echo $j;
+    pdflatex -jobname=tmp$j "\includeonly{$j}\input{main}";
+done
+
+for i in "${chapters[@]}"
+do
+    mv tmp$i.pdf pdfs/$i.pdf
+done

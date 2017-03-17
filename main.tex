@@ -1,0 +1,103 @@
+% \documentclass-book
+\documentclass[a4paper,11pt]{book}
+\usepackage[utf8]{inputenc}
+\usepackage{a4wide}
+\usepackage[unicode]{hyperref}
+\usepackage[slovene]{babel}
+\selectlanguage{slovene}
+\usepackage[pdftex]{graphicx} % za slike
+\usepackage{setspace}
+\usepackage{textcomp}
+\usepackage[version=3]{mhchem}
+\usepackage{booktabs} % makes nice quality tables
+\usepackage{emptypage}
+
+% \usepackage{mathptmx}
+\usepackage{palatino} 
+\usepackage{pxfonts}
+\usepackage{charter}
+\usepackage{algorithmic} % for algorithms
+
+\usepackage{amsopn}
+\DeclareMathOperator*{\argmax}{\arg\,\max}
+
+\renewcommand{\baselinestretch}{1.2}
+\newcommand{\angl}[1]{(angl. {\em #1})}
+\newcommand{\comment}[1]{#1}
+\newcommand{\pd}[2]{\frac{\partial#1}{\partial#2}}
+\newcommand{\plogp}[2]{{#1\over #2}\log_2{#1\over #2}}
+\newcommand{\ds}{\displaystyle}
+\newcommand{\mean}[1]{\overline{#1}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\tr}{\intercal}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\usepackage{color}
+\definecolor{light-gray}{gray}{0.95}
+% \newcommand{\text}{\rm}
+\usepackage{listings}
+\usepackage{url}
+% \usepackage{program}
+
+\newtheorem{teorem}{Teorem}
+
+\lstnewenvironment{python}[1][]{
+\lstset{
+language=python,
+basicstyle=\ttfamily\footnotesize\setstretch{1},
+stringstyle=\color{red},
+showstringspaces=false,
+alsoletter={1234567890},
+otherkeywords={\ , \}, \{},
+keywordstyle=\color{blue},
+emph={access,and,break,class,continue,def,del,elif,else,%
+except,exec,finally,for,from,global,if,import,in,is,%
+lambda,not,or,pass,print,raise,return,try,while},
+emphstyle=\color{black}\bfseries,
+emph={[2]True, False, None, self},
+emphstyle=[2]\color{green},
+emph={[3]from, import, as},
+emphstyle=[3]\color{blue},
+upquote=true,
+morecomment=[s]{"""}{"""},
+commentstyle=\color{red}\slshape,
+emph={[4]1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
+emphstyle=[4]\color{blue},
+literate=*{:}{{\textcolor{blue}:}}{1}%
+{=}{{\textcolor{blue}=}}{1}%
+{-}{{\textcolor{blue}-}}{1}%
+{+}{{\textcolor{blue}+}}{1}%
+{*}{{\textcolor{blue}*}}{1}%
+{!}{{\textcolor{blue}!}}{1}%
+{(}{{\textcolor{blue}(}}{1}%
+{)}{{\textcolor{blue})}}{1}%
+{[}{{\textcolor{blue}[}}{1}%
+{]}{{\textcolor{blue}]}}{1}%
+{<}{{\textcolor{blue}<}}{1}%
+{>}{{\textcolor{blue}>}}{1},%
+% framexleftmargin=1mm, framextopmargin=1mm, frame=shadowbox, rulesepcolor=\color{blue},#1
+}}{}
+
+\lstset{ %
+language=Python,
+basicstyle=\ttfamily\setstretch{1},
+backgroundcolor=\color{light-gray}
+}
+
+% include hyperlinks
+\usepackage{hyperref}
+
+\title{Odkrivanje znanj iz podatkov \\
+\small (zapiski predavateljev, samo za interno uporabo)}
+\author{Blaž Zupan}
+\date{\today}
+
+
+\begin{document}
+\include{prve-strani}
+\include{uvod}
+\include{vecrazredna-klasifikacija}
+\include{izbor-znacilk}
+\include{projekcije}
+
+\end{document}
