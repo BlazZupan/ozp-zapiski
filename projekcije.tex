@@ -242,22 +242,22 @@ Primer takšne metode je FreeViz. FreeViz je linearna projekcija. Če imajo prim
 
 Kaj pomeni dobro matriko? Določiti moramo funkcijo, ki jo želimo optimizirati. Za razliko od MDSa tokrat ne bomo definirali energije, temveč silo (torej v resnici ne definiramo funkcije, ki jo želimo optimizirati, temveč njen gradient). Točki, ki ustrezata primeroma iz istega razreda, se bosta privlačili, točke, ki ustrezajo primerom iz različnih razredov, se bodo odbijale. Za razliko od tega, česar smo navajeni iz fizike, bodo privlačne sile naraščale z razdaljo. To je smiselno zato, ker je točke, ki so izgubljene nekje daleč od svojih, težko privleči mimo vseh točk, ki so jim na poti, zato jih bomo vlekli z veliko silo. Po drugi strani pa dveh točk iz istega razreda, ki so že prišle blizu ena drugi, nima smisla tlačiti še bližje. Z odbojnimi silami je ravno nasprotno: točke različnih razredov, ki so si blizu skupaj želimo na vsak način spraviti narazen. Točk različnih razredov, ki so že daleč narazen, pa nima smisla še bolj odbijati. Zato bodo odbojne sile z razdaljo padale.
 
-Naj bo torej $\mathbf{F_{ij}}$ sila, s katero projiciran primer $j$ deluje na točko $i$; definiramo jo lahko recimo, tako, da za točke istega razreda narašča in za točke različnih razredov pada premosorazmerno z razdaljo (po želji pa lahko izberemo tudi kvadrat ali kako drugo primerno funkcijo razdalje). Naj bo $\mathbf{F_i} = \sum_{j\ne i} \mathbf{F_{ij}}$ vsota vseh sil na točko $i$. Sprememba potencialna energija projicirane točke je določena s silo in spremembo lege točke:
+Naj bo torej ${\bm F_{ij}}$ sila, s katero projiciran primer $j$ deluje na točko $i$; definiramo jo lahko recimo, tako, da za točke istega razreda narašča in za točke različnih razredov pada premosorazmerno z razdaljo (po želji pa lahko izberemo tudi kvadrat ali kako drugo primerno funkcijo razdalje). Naj bo ${\bm F_i} = \sum_{j\ne i} {\bm F_{ij}}$ vsota vseh sil na točko $i$. Sprememba potencialna energija projicirane točke je določena s silo in spremembo lege točke:
 \begin{equation}
   \nonumber
-  dE_i=-\vect(F)_i^\tr \vect(\theta)^{(i)},
+  dE_i=-\vect{\bm F_i}^\tr \vect{\theta^{(i)}},
 \end{equation}
 %
 sprememba energije celotnega sistema pa
 \begin{equation}
   \nonumber
-  dE=-\sum_i\vect(F)_i^\tr\vect(\theta)^{(i)},
+  dE=-\sum_i\vect{\bm F_i}^\tr\vect{\theta^{(i)}},
 \end{equation}
 
-Naše točke, primeri, so fiksni, spreminja pa se projekcijska matrika $\vect{A}$. Ker je projekcija primerov določena z $\vect{\theta}^{()i}=\vect(A)\vect{x}^{(i)}$, so spremembe lege v projekcijski ravnini plod sprememb v projekcijski matriki:
+Naše točke, primeri, so fiksni, spreminja pa se projekcijska matrika $\vect{A}$. Ker je projekcija primerov določena z $\vect{\theta}^{(i)}=\vect{A}\vect{x}^{(i)}$, so spremembe lege v projekcijski ravnini plod sprememb v projekcijski matriki:
 \begin{equation}
   \nonumber
-  \vect{\theta}^{()i}=\vect(dA)\vect{x}^{(i)}
+  \vect{d\theta}^{(i)}=\vect{dA}\vect{x}^{(i)}
 \end{equation}
 %
 Ko se spreminja projekcijska matrika, se spreminja potencialna energija sistema:
@@ -271,13 +271,13 @@ Ko se spreminja projekcijska matrika, se spreminja potencialna energija sistema:
 \end{equation}
 %
 
-Iščemo gradient, ki nam pove, kako sprememba projekcije posameznega primera vplivajo na spremembe energije sistema:
+Iščemo gradient, ki nam pove, kako sprememba projekcije $i$-tega primera vpliva na spremembe energije sistema. Ta znaša $\vect{F}_i{{x}^{(i)}}^\tr$, 
+oziroma združeni gradient, ki pove, kako sprememba projekcije vseh primerov vpliva na skupno energijo sistema:
 \begin{equation}
-  \frac{\partial E}{\partial \vect{A}^{(i)}} = \vect{F}_i{\theta{x}^{(i)}}^\tr,
-\end{equation}
-oziroma združeni gradient, ki pove, kako sprememba projekcije primerov vpliva na energijo sistema:
-\begin{equation}
-  \frac{\partial E}{\partial \vect{A}} = \sum_i\vect{F}_i{\theta{x}^{(i)}}^\tr,
+  \begin{split}
+    \frac{\partial E}{\partial \vect{A}} = & \sum_i\vect{F}_i{{x}^{(i)}}^\tr \\
+ = & {\bm F} {\bm X},
+  \end{split}
 \end{equation}
 %
 Algoritem FreeViz prične z neko naključno matriko $\vect{A}$ in potem v vsakem koraku izračuna sile na točke v projekcijski ravnini in gradiente ter projekcijo matriko ustrezno spremeni. Postopek ponavlja do konvergence.

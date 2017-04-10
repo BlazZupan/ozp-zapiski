@@ -1,4 +1,4 @@
-chapters=( "vecrazredna-klasifikacija" "izbor-znacilk" "projekcije" )
+chapters=( "vecrazredna-klasifikacija" "izbor-znacilk" "projekcije" "ansambli")
 # chapters=( "projekcije" )
 for i in "${chapters[@]}"
 do
