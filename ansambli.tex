@@ -76,7 +76,7 @@ Prilagodljiv boosting \angl{adaptive boosting}~\cite{Freund1997} je nekoliko dru
   \STATE normalize weights $\bm w$
   \ENDFOR
 \end{algorithmic}
-\caption{Učenje z pristopom bagging}
+\caption{Učenje z pristopom AdaBost}
 \label{alg:adaboost}
 \end{algorithm}
 
@@ -101,10 +101,10 @@ Predpostavimo, da smo na podatkih zgradili model $F_\Theta$. S $\Theta$ označim
 oziroma za vse primere iz učne množice velja:
 \begin{equation}
   \begin{split}
-    F(x^{(1)})+h(x^{(1)}& = y^{(1)} \\
-    F(x^{(2)})+h(x^{(2)}& = y^{(2)} \\
+    F(x^{(1)})+h(x^{(1)})& = y^{(1)} \\
+    F(x^{(2)})+h(x^{(2)})& = y^{(2)} \\
     & \ldots \\
-    F(x^{(m)})+h(x^{(m)}& = y^{(m)} \\
+    F(x^{(m)})+h(x^{(m)})& = y^{(m)} \\
   \end{split}
   \label{eq:gb-residual}
 \end{equation}
@@ -166,7 +166,7 @@ Potem je odvod zgornje kriterijske funkcije v smeri vrednosti modela za primer $
   \begin{split}
     \pd{J}{F(x^{(i)})} & = \pd{\sum_{i=1}^m L(y^{(i)},F(x^{(i)}))}{F(x^{(i)})} \\
     & = \pd{L(y^{(i)},F(x^{(i)}))}{F(x^{(i)})} \\
-    & = F(x^{(i)}-y^{(i)}
+    & = F(x^{(i)})-y^{(i)}
   \end{split}
 \end{equation}
 Zadnje je ravno naša (negativna) napaka iz enačbe~\ref{eq:gb-residual}.
