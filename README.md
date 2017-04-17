@@ -4,6 +4,6 @@ Zapiski so nastali v okviru predmeta Odkrivanje znanj iz podatkov, ki poteka na 
 
 # Kudos
 
-blaz1 (+3)
-mjazbc (+3)
-juree (+5)
+- blaz1 (+3)
+- mjazbc (+3)
+- juree (+5)
