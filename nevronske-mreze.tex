@@ -1,0 +1,327 @@
+\chapter{Nevronske mreže}
+
+% risanje nevronskih mrež
+% https://tex.stackexchange.com/questions/153957/drawing-neural-network-with-tikz
+
+V poglavju pregledamo arhitekturo in izpeljavo gradientov kriterijske funkcije za uteži najpreprostejšega model umetne nevronske mreže, tako imenovane usmerjene \angl{feed forward} nevronske mreže s polnimi povezavami med enotami sosednjih nivojev. Poleg strukture nevronske mreže uteži popolnoma določajo model nevronske mreže, izračun njihovih gradientov pa pri podanih učnih podatkih omogoča iskanje vrednosti uteži z gradientnim sestopom. Kot pri drugih modelih, ki smo jih pridobili na ta način, je tudi tu namen zgraditi mrežo, ki se čim bolj prilega učnim podatkom.
+
+\section{Arhitektura in notacija}
+
+Nevronska mreža je urejena mreža nevronov oziroma enot. Povezave med enotami označujejo funkcijske odvisnosti. Primer arhitekture mreže kaže slika~\ref{f-primer-mreze}. Vhod mreže sprejme atributno opisan primer oziroma vektor njegovih vrednosti atributov $\vect{x}$. Na izhodu mreža odda vrednosti izhodnih spremenljivk oziroma razredov. V strojnem učenju pravimo, da mreža za vhodni vektor $\vect{x}$ odda vektor napovedi $\vect{y}$. Vektor $\vect{y}$ je lahko eno ali več-dimenzionalen. Za regresijski model bo zadostovala ena enota, za klasifikacijo pa tipično izberemo toliko izhodnih enot, kolikor imamo razredov. Pri klasifikaciji enote poročajo o verjetnosti, da vhodnih primer $\vect{x}$ pripada določenemu razredu.
+
+Vrednostim nevronov pravimo aktivacije. Aktivacije vhodnega nivoja mreže ($L_1$) nastavimo atributnim vrednostim primera, za katerega želimo izračunati vrednost razreda. Mreža z izračunom aktivacije enot njenem zadnjem nivoju ($L_K$) izračuna oceno vrednosti razrednih spremenljivk pripadajočega primera iz vhoda mreže. V preprosti nevronski mreži, ki jo obravnava to poglavje, so vse enote predhodnega nivoja povezane z vsemi enotami naslednjega nivoja. 
+
+Aktivacijo enote na nivoju $L_i$ izračunamo kot uteženo vsoto vhodnih aktivacij nivoja $L_{i-1}$, ki jo transformiramo z neko nelinearno aktivacijsko funkcijo. Da bi linearne kombinacije vhodov lahko vključevale še konstantni člen, vsem nivojem nevronske mreže z izjemo zadnjega nivoja dodamo konstanten nevron $a_0^{(i)}$ ($i=\{1,2,\ldots,K\}$), katerega aktivacija je enaka 1.
+
+Aktivacijo $j$-tega nevrona na $l$-tem nivoju nevronske mreže izračunamo kot:
+\begin{eqnarray}
+z_j^{(l)} & = & \sum_{k=0}^{n_{l-1}} w_{kj}^{(l)}\ a_k^{(l-1)} \\
+a_j^{(l)} & = & \sigma(z_j^{(l)}),
+\end{eqnarray}
+kjer je $n_k$ število enot nivoja $L_k$ in $\sigma$ aktivacijska funkcija. Dve tipični in pogosto uporabljani aktivacijski funkciji sta logistična funkcija, kjer je $\sigma(z)=1/(1+\exp(-z))$ in popravljena linearna funkcija ali ReLU \angl{rectified linear unit}, kjer je $\sigma(z)=\max(0, z)$. Aktivacijske funkcije morajo biti zvezne in odsekoma odvedljive.
+
+\tikzset{%
+  neuron/.style={
+    circle,
+    draw,
+    minimum size=1cm
+  },
+  neuron missing/.style={
+    draw=none, 
+    scale=4,
+    text height=0.333cm,
+    execute at begin node=\color{black}$\vdots$
+  },
+  label/.style={
+    minimum size=1cm
+  },
+}
+
+\begin{figure}[htbp]
+\centering{
+\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
+
+% nodes
+\foreach \m in {1,2,3}
+  \node [neuron] (l1-\m) at (0,4-\m) {$a_\m^{(1)}$};
+\node [neuron] (l1-0) at (0,4) {$a_0^{(1)}$};
+
+\foreach \m in {1,2,3}
+  \node [neuron] (l2-\m) at (2,4-\m) {$a_\m^{(2)}$};
+\node [neuron] (l2-0) at (2,4) {$a_0^{(2)}$};
+
+\foreach \m in {1,2}
+  \node [neuron] (l3-\m) at (4,3.5-\m) {$a_\m^{(3)}$};
+\node [neuron] (l3-0) at (4,3.5) {$a_0^{(3)}$};
+
+\foreach \m in {1,2}
+  \node [neuron] (l4-\m) at (6,3.5-\m) {$a_\m^{(4)}$};
+
+
+% input and output 
+\foreach \i in {1,2,3}
+  \draw [<-] (l1-\i) -- ++(-1,0)
+    node [above, midway] {$x_\i$};
+
+\foreach \i in {1,2}
+  \draw [->] (l4-\i) -- ++(1,0)
+    node [above, midway] {$y_\i$};
+
+% edges
+\foreach \i in {0,...,3}
+  \foreach \j in {1,...,3}
+    \draw [->] (l1-\i) -- (l2-\j);
+
+\foreach \i in {0,...,3}
+  \foreach \j in {1,...,2}
+    \draw [->] (l2-\i) -- (l3-\j);
+
+\foreach \i in {0,...,2}
+  \foreach \j in {1,...,2}
+    \draw [->] (l3-\i) -- (l4-\j);
+
+% layer title
+
+\foreach \l [count=\x from 0] in {nivo $L_1$, nivo $L_2$, nivo $L_3$, nivo $L_4$}
+  \node [align=center, above] at (\x*2,4.5) {\l};
+
+\end{tikzpicture}}
+\caption{Primer štirinivojske nevronske mreže. Prvi nivo je nivo vhodnih podatkov, kjer aktivacijo nevronov nastavimo na vrednosti atributov ($a_i^{(1)}=x_i$). Sledita dva skrita nivoja, $L_2$ in $L_3$ in končni nivo, kjer so aktivacije nevronov vrednosti izračunanih ocen za razredne spremenljivke. V splošnem privzamemo, da imajo aktivacije $a_0^{(*)}$ na poljubnem nivoju konstantno vrednost $1$.}
+\label{f-primer-mreze}
+\end{figure}
+
+\begin{figure}
+\centering{
+\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
+% nodes
+\foreach \m in {1,2,3}
+  \node [neuron] (l2-\m) at (2,4-\m) {$a_\m^{(2)}$};
+\node [neuron] (l2-0) at (2,4) {$a_0^{(2)}$};
+
+\foreach \m in {1,2}
+  \node [neuron] (l3-\m) at (4,3.5-\m) {$a_\m^{(3)}$};
+\node [neuron] (l3-0) at (4,3.5) {$a_0^{(3)}$};
+
+% edges
+\foreach \i in {0,...,3}
+  % \draw [->] (l2-\i) -- (l3-2);
+  \path [draw, ->] (l2-\i) -- node[above] {$w_{\i,1}^{(3)}$} (l3-1);
+\end{tikzpicture}
+}
+\caption{Primer sosednjih nivojev v nevronski mreži z oznakami uteži. Oznaka nivoja uteži ustreza oznaki nivoja, katerega aktivacijo računamo. Podobno je z vrstnim redom indeksov; prvi indeks je indeks nevrona, katerega vrednost je uporabljena pri računanju aktivacije, drugi pa indeks nevrona, za katerega aktivacijo računamo, drugi indeks pa indeks nevrona. Uteži, predstavljene na sliki, so del matrike uteži ${\rm W}^{(3)}$ in predstavljajo njeno prvo vrstico.}
+\label{f-nn-utezi}
+\end{figure}
+
+V implementacijah nevronske mreže uteži na posameznem nivoju predstavimo z matrikami in aktivacije na posameznem nivoju z vektorji. Aktivacije $\vect{a}^{(l)}$ nivoja $l$ tako izračunamo kot funkcijo skalarnega produkta uteži in aktivacij nivoja $l-1$:
+\begin{equation}
+\vect{a}^{(l)} = \sigma({\vect{a}^{(l-1)}}^{\tr} \cdot W^{(l)} )
+\end{equation}
+
+\noindent Primer: aktivacije drugega nivoja dela nevronske mreže s slike~\ref{f-nn-utezi} naj zavzamejo vrednost $\vect{a}^{(2)}=(1\ 0\ 1\ 2)^{\tr}$. Uteži tretjega nivoja predstavimo z matriko $W^{(l)}$, katere primer je:
+\[
+W^{(l)} = \begin{pmatrix} 1 & 0 \\ 1 & 1 \\ 0 & 0 \\ 0 & 1 \end{pmatrix}
+\]
+\noindent Utežena vsota aktivacij, ki jo potrebujemo za izračun aktivacij tretjega nivoja nevronske mreže je tako:
+\[
+\begin{pmatrix}1 & 0 & 1 & 2\end{pmatrix}
+\begin{pmatrix} 1 & 0 \\ 1 & 1 \\ 0 & 0 \\ 0 & 1 \end{pmatrix} = 
+\begin{pmatrix}1 \\ 2\end{pmatrix}
+\]
+
+\section{Učenje}
+
+Dan je nabor atributno opisanih primerov $\matr{X}\in\mathbb{R}^{m,n}$ s pripadajočo vrednostjo razreda. Nevronske mreže lahko obravnavajo primere z več razrednimi spremenljivkami, katerih vrednosti napovejo kot vrednost aktivacije enot v zadnjem nivoju nevronske mreže. Pri učenju želimo poiskati vrednosti uteži tako, da se napovedi mreže čimbolj ujemajo z dejanskimi vrednostmi razredov na učni množici primerov. Za učenje moramo tako določiti kriterijsko funkcijo, katere vrednost optimiziramo, in izračunati gradient kriterijske funkcije za vsako utež v mreži. Za optimizacijo vrednosti uteži uporabimo gradientni sestop. Slednjega že dobro poznamo, zato se bomo v tem poglavju ukvarjali samo z izračunom gradienta.
+
+\subsection{Enodimenzionalna nevronska mreža}
+
+Privzemimo, da imamo učno množico primerov, ki so opisani z enim samim atributom in kjer imamo en sam, zvezni razred. Najbolj enostavna nevronska mreža za tak primer vsebuje poleg enote s konstantno aktivacijo (\angl{bias}) eno samo aktivno aktivacijsko enoto na vsakem od nivojev. Primer take mreže je podan na sliki~\ref{f-nn-lin}). Parametri te mreže so uteži $w_0^{(2)}$, $w_1^{(2)}$, $w_0^{(3)}$, $w_1^{(3)}$, $w_0^{(4)}$, $w_1^{(4)}$, kjer so z $w_0^{(*)}$ označene uteži, ki vodijo iz enot s konstantno aktivacijo in z $w_1^{(*)}$ označene uteži, ki vodijo iz enos s spremenljivo vrednostjo aktivacije. Za začetek si zamislimo, da imamo samo en učni primer $(x,y)$. Kriterijska funkcija, ki jo optimiziramo oziroma za katero iščemo primerne parametre naj bo enaka kvadratu napake,
+\begin{equation}
+J\big(w_0^{(2)}, w_1^{(2)}, w_0^{(3)}, w_1^{(3)}, w_0^{(4)}, w_1^{(4)}\big)=\big(a^{(4)}-y\big)^2.
+\end{equation}
+
+\begin{figure}[htbp]
+\centering{
+\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
+\foreach \m [count=\i] in {0,2,4,6}
+  \node [neuron] (\i) at (\m,0) {$a^{(\i)}$};
+\foreach \m [count=\i] in {0,2,4}
+  \node [neuron] (w\i) at (\m,1) {$+1$};
+
+\foreach \i/\j in {1/2,2/3,3/4}
+  \draw [->] (\i) -- (\j);
+\foreach \i/\j in {1/2,2/3,3/4}
+  \draw [->] (w\i) -- (\j);
+
+\draw [<-] (1) -- ++(-1,0) node [above, midway] {$x$};
+\draw [->] (4) -- ++(1,0) node [above, midway] {$y$};
+
+\end{tikzpicture}}
+\label{f-nn-lin}
+\caption{Nevronska mreža z enim samim aktivnim nevronom na vsakem od nivoju. Taka, poenostavljena, nam služi za pomoč pri izpeljavi gradientov uteži.}
+\end{figure}
+
+Iščemo gradiente kriterijske funkcije oziroma parcialne odvode kriterijske funkcije po vseh šestih utežeh. Najbolj enostavno nam je začeti čisto zadaj, pri zadnjem nivoju, ki ga označimo imenujmo nivo $L$. V našem primeru je $L=4$. Odvisnost kriterijske funkcije od spremenljivk zadnjega nivoja so prikazane na sliki~\ref{f-nn-zadnji}, izrazimo pa jih kot:
+\begin{eqnarray}
+J & = & (a^{(L)}-y)^2, \\
+a^{(L)} & = & \sigma(z^{(L)}), \\
+z^{(L)} & = & w_1^{(L)} a^{(L-1)} + w_0^{(L)}.
+\end{eqnarray}
+
+\begin{figure}
+\centering{
+\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
+  \node [label] (w) at (0,3) {$w_1^{(L)}$};
+  \node [label] (a1) at (1,3) {$a^{(L-1)}$};
+  \node [label] (b) at (2,3) {$w_0^{(L)}$};
+  \node [label] (z) at (1,2) {$z^{(L)}$};
+  \node [label] (y) at (0,1) {$y$};
+  \node [label] (a) at (1,1) {$a^{(L)}$};
+  \node [label] (J) at (1,0) {$J$};
+  \draw [->] (w) -- (z) -- (a) -- (J);
+  \draw [->] (a1) -- (z);
+  \draw [->] (b) -- (z);
+  \draw [->] (y) -- (J);
+\end{tikzpicture}}
+\caption{Shematski prikaz odvisnosti kriterijske funkcije za zadnji nivo nevronske mreže.}
+\label{f-nn-zadnji}
+\end{figure}
+
+Na tem, zadnjem nivoju, imamo dve uteži, $w_0^{(L)}$ in $w_1^{(L)}$. Izračunajmo gradient kriterijske funkcije po teh dveh utežeh. Najprej za utež $w_1^{(L)}$. Spomnimo so, da je kriterijska funkcija odvisna od aktivacije na nivoju $L$, ta od utežene vsote, in slednja od aktivacije nivoja $L-1$. Majhna sprememba uteži $w_1^{(L)}$ povzroči spremembo $z^{(L)}$, ta spremembo $a^{(L)}$, in slednja spremembo kriterijske funkcije $J$. Parcialni odvod kriterijske funkcije po uteži $w_1^{(L)}$ zato zračunamo z verižnim pravilom:
+\begin{equation}
+\pd{J}{w_1^{(L)}} = \pd{z^{(L)}}{w_1^{(L)}}\ \pd{a^{(L)}}{z^{(L)}}\ \pd{J}{a^{(L)}},
+\end{equation}
+\noindent kjer lahko naštete parcialne odvode dobimo iz zgoraj zapisanih funkcijskih odvisnosti:
+\begin{eqnarray}
+\pd{z^{(L)}}{w_1^{(L)}} & = & a^{(L-1)}, \\
+\pd{a^{(L)}}{z^{(L)}} & = & \sigma'(z^{(L)}), \\
+\pd{J}{a^{(L)}} & = & 2(a^{(L)})-y).
+\end{eqnarray}
+\noindent Tu je $\sigma'$ odvod aktivacijske funkcije po njeni edini spremenljivki. V primeru logistične aktivacijske funkcije ta odvod že poznamo:
+\begin{equation}
+\sigma'(z^{(L)})=\sigma(z^{(L)})(1-\sigma(z^{(L)}))=a^{(L)}(1-a^{(L)})
+\end{equation}
+
+Izračun parcialnega odvoda kriterijske funkcije po $w_1^{(L)}$ je bil enostaven. Kaj pa parcialni odvod po $w_0^{(L)}$? Dobimo ga enako kot zgoraj, drugačen je le odvod utežene vsote aktivacij na vhodu enote, ki je sedaj:
+\begin{eqnarray}
+\pd{z^{(L)}}{w_0^{(L)}} = 1.
+\end{eqnarray}
+
+Do tu je šlo vse enostavno. Kaj pa predzadnji nivo. Tega (glej sliko~\ref{f-nn-predzadnji}) s kriterijsko funkcijo povezuje aktivacija enote $a^{(L-1)}$. Kako njena majhna sprememba učinkuje na spremembo kriterijske funkcije?
+\begin{equation}
+  \pd{J}{a^{(L-1)}} = \pd{z^{(L)}}{a^{(L-1)}}\ \pd{a^{(L)}}{z^{(L)}}\ \pd{J}{a^{(L)}}
+\end{equation}
+\noindent Zadnja dva parcialna odvoda smo že izračunali, manjka nam samo še prvi:
+\begin{equation}
+  \pd{z^{(L)}}{a^{(L-1)}} = w_1^{(L)}
+\end{equation}
+
+
+\begin{figure}
+\centering{
+\begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
+  \node [label] (w) at (0,3) {$w_1^{(L-1)}$};
+  \node [label] (a1) at (1,3) {$a^{(L-2)}$};
+  \node [label] (b) at (2,3) {$w_0^{(L-1)}$};
+  \node [label] (z) at (1,2) {$z^{(L-1)}$};
+  \node [label] (a) at (1,1) {$a^{(L-1)}$};
+  \draw [->] (w) -- (z) -- (a);
+  \draw [->] (a1) -- (z);
+  \draw [->] (b) -- (z);
+\end{tikzpicture}}
+\caption{Shematski prikaz odvisnosti aktivacije zadnjega nivoja od elementov predzadnjega nivoja nevronske mreže.}
+\label{f-nn-predzadnji}
+\end{figure}
+
+Vse imamo pripravljeno za izračun gradientov za uteži na predzadnjem nivoju. Odvisnosti teh od aktivacije $a^{(L-1)}$ prikazuje slika~\ref{f-nn-predzadnji}, za to aktivacijo pa parcialni odvod že poznamo. Tudi tu parcialni odvod kriterijske funkcije po uteži $w_1^{(L-1)}$ dobimo z verižnim pravilom:
+\begin{equation}
+  \pd{J}{w_1^{(L-1)}} = \pd{z^{(L-1)}}{w^{(L-1)}}\ \pd{a^{(L-1)}}{z^{(L-1)}}\ \pd{J}{a^{(L-1)}}
+\end{equation}
+\noindent Zadnji parcialni odvod že poznamo, izračunati moramo le še prva dva:
+\begin{eqnarray}
+\pd{z^{(L-1)}}{w^{(L-1)}} & = & a^{(L-2)} \\
+\pd{a^{(L-1)}}{z^{(L-1)}} & = & \sigma'(z^{(L-1)}) = a^{(L-1)} (1-a^{(L-1)})
+\end{eqnarray}
+
+Podobno, z uporabo verižnega pravila, izpeljemo še gradiente za uteži preostalih nivojev ter pri tem uporabimo gradiente aktivacij, ki smo jih že izračunali. Izračun gradientov kriterijske funkcije po utežeh v nevronski mreži torej poteka od konca proti začetku. Postopku verižnega pravila v jeziku nevronskih mrež pravimo vzvratno razširanje napake oziroma \angl{back propagation}.
+
+Izpišimo torej splošne enačbe za izračun gradientov po tem postopku, in pri tem nek z $l$ označimo poljudni nivo nevronske mreže:
+\begin{eqnarray}
+  \pd{J}{w_1^{(l)}} & = & \pd{z^{(l)}}{w_1^{(l)}}\ \pd{a^{(l)}}{z^{(l)}}\ \pd{J}{a^{(l)}} \\
+  \pd{J}{a^{(l)}} & = & \left\{
+    \begin{array}{ll}
+      2(a^{(L)})-y), & l=L \\
+      \displaystyle
+      \pd{z^{(l+1)}}{a^{(l)}}\ \pd{a^{(l+1)}}{z^{(l+1)}}\ \pd{J}{a^{(l+1)}}, 
+      & l=1,2,\ldots,L-1
+    \end{array} \right. \\
+  \pd{z^{(l)}}{w_1^{(l)}} & = & a^{(l-1)} \\
+  \pd{a^{(l)}}{z^{(l)}} & = & \sigma'(z^{(l)})
+\end{eqnarray}
+\noindent Podobno kot zgoraj lahko zapišemo tudi parcialne odvode za $w_0^{(l)}$, le da je tu parcialni odvod $\pd{z^{(l)}}{w_0^{(l)}}$ enak $1$.
+
+Zgoraj smo privzeli, da imamo samo en učni primer. Za množico primerov je kriterijska funkcija lahko:
+\begin{equation}
+J={2\over m}\sum_{i=1}^m \big( \hat{y}^{(i)} - y^{(i)}\big)^2
+\end{equation}
+\noindent kjer smo tokrat z $\hat{y}^{(i)}$ zapisali ocenjeno vrednost razredne spremenljivke za $i$-ti primer $x^{(i)}$ in z $y^{(i)}$ njeno pravo vrednost. Skladno s to kriterijsko funkcijo se pri izračunu gradientov spremeni le $\pd{J}{a^{(L)}}$, ki je sedaj enak povprečni vrednosti napake:
+\begin{equation}
+  \pd{J}{a^{(L)}} = {1\over m}\sum_{i=1}^m \big(a^{(L)}(x^{(i)}))-y^{(i)}\big),
+\end{equation}
+\noindent kjer smo z $a^{(L)}(x^{(i)}))$ označili vrednost aktivacije enote na zadnjem nivoju nevronske mreže, ki jo ta zavzame pri vhodnem primeru $x^{(i)}$.
+
+Vsota kvadratov napake je samo ena od možnih kriterijskih funkcij. Pravzaprav lahko uporabimo katerokoli kriterijsko funkcijo, ki pa mora biti odvedljiva po aktivaciji zadnjega nevrona.
+
+\subsection{Splošna polno-povezana nevronska mreža}
+
+Zgornji primer ``enodimenzionalne'' nevronske mreže razširimo na primer, kjer imamo na vsakem nivoju lahko več aktivnih enot. Utežena vsota aktivacij na vhodu enote $j$ nivoja $l$ bo enaka:
+\begin{equation}
+  z^{(l+1)}_j = \sum_{i=0}^{n_{l}} w_{ij} a_{i}^{(l)}
+\end{equation}
+\noindent To pa je tudi edina sprememba, ki jo moramo upoštevati pri izračunu novih parcialnih odvodov. Odvod kriterijske funkcije po dani uteži ostane pravzaprav enak kot prej (z izjemo nekaj dodanih indeksov):
+\begin{equation}
+  \pd{J}{w_{kj}^{(l)}} = \pd{z_j^{(l)}}{w_{kj}^{(l)}}\ \pd{a_j^{(l)}}{z_j^{(l)}}\ \pd{J}{a_j^{(l)}},
+\end{equation}
+\noindent spremeni se le odvod kriterijske funkcije po aktivaciji $a_k^l$, saj ta sedaj vpliva na kriterijsko funkcijo po različnih poteh, ki vodijo preko enot nivoja $l+1$. Tudi tu uporabimo verižno pravilo, a upoštevamo vse poti vplivov aktivacije $a_k^l$:
+\begin{equation}
+  \pd{J}{a_k^{(l)}} = \sum_{j=0}^{n_l} \pd{z_j^{(l+1)}}{a_k^{(l)}} \pd{a_j^{(l+1)}}{z_j^{(l+1)}} \pd{J}{a_j^{(l+1)}}
+\end{equation}
+\noindent Odvode izračunamo enako enostavno kot v ``enodimenzionalni'' mreži, le da imamo tu opravka z vsoto verig odvodov.
+
+\subsection{Vse skupaj, matrično in vektorsko}
+
+Zgornje izpeljave so zaradi preprostosti funkcij, ki gradijo umetne nevronske mreže, precej enostavne. A se hitro zapleteš z indeksi. Veliko preprosteje je vse te enačbe zapisati v vektorsko-matrični obliki. Pričnimo z učno množico $\matr{X}\in\mathbb{R}^{m,n}$ in za vse te naenkrat izračunajmo aktivacije enot nevronske mreže. Podatkom $\matr{X}$bomo dodali kolono enic, tako spremenjene podatke $\matr{X}'$ pa vložili v enote prvega nivoja nevronske mreže:
+\begin{equation}
+  \underset{m \times n_1}{\matr{A}^{(1)}} = \underset{m\times(n+1)}{\matr{X}'}
+\end{equation}
+\noindent Od tu dalje aktivacije izračunamo po naslednji enačbi:
+\begin{eqnarray}
+  \underset{m\times n_{l+1}}{\matr{Z}^{(l+1)}} & = & \underset{m\times n_l}{\matr{A}^{(l)}} \times \underset{n_l\times n_{l+1}}{\matr{W}^{(l+1)}}, \\
+  \underset{m\times n_{l+1}}{\matr{A}^{(l+1)}} & = & \sigma\big(\underset{m\times n_{l+1}}{\matr{Z}^{(l+1)}}\big)
+\end{eqnarray}
+\noindent kjer skalarno aktivacijsko funkcijo $\sigma$ apliciramo na vsakega od elementov matrike v argumentu posebej.
+
+S to, matrično, notacijo zapišimo tudi izračun gradientov. Pričnemo z gradientno matriko $\matr{D}^{(L)}$ za uteži zadnjega nivoja:
+\begin{eqnarray}
+  \underset{m\times n_L}{\matr{d}^{(L)}} & = & 
+  \big(\underset{m\times n_L}{\matr{A}^{(L)}}-\underset{m\times n_L}{\matr{Y}}\big) 
+  \ \circ\  \underset{m\times n_L}{\matr{A}^{(L)}} \ \circ \ \big(1-\underset{m\times n_L}{\matr{A}^{(L)}}\big) \\
+%
+  \underset{n_{L-1}\times n_L}{\matr{D}^{(L)}} & = {1\over m} & 
+  \underset{n_{L-1}\times m}{\big(\matr{A}^{(L-1)}\big)^\tr} \times
+  \underset{m\times n_L}{\matr{d}^{(L)}}
+\end{eqnarray}
+kjer je $\circ$ oznaka za Hadamardov produkt, oziroma produkt po elementih dveh matrik. Nadaljujemo s izračunom gradientnih matrik $\matr{D}^{(L)}$ za uteži preostalih nivojev:
+\begin{eqnarray}
+  \underset{m\times n_l}{\matr{d}^{(l)}} & = & 
+  \big(\underset{m\times n_{l+1}} {\matr{d}^{(l+1)}}\times (\underset{n_{l+1}\times n_L}{\matr{W}^{(l+1)}})^\tr\big) 
+  \ \circ\  \underset{m\times n_L}{\matr{A}^{(l)}} \ \circ \ \big(1-\underset{m\times n_L}{\matr{A}^{(l)}}\big) \\
+%
+  \underset{n_{l-1}\times n_l}{\matr{D}^{(l)}} & = {1\over m} & 
+  \underset{n_{l-1}\times m}{\big(\matr{A}^{(l-1)}\big)^\tr} \times
+  \underset{m\times n_l}{\matr{d}^{(l)}}
+\end{eqnarray}
+
+V implementaciji nastavimo matrike uteži na neko manjšo, neničelno vrednost (na primer med 0 in 0.1) in potem z gradientnim sestopom izračunamo vrednost uteži, ki za dani nabor učnih podatkov minimizira kriterijsko funkcijo. Prileganju učnim podatkom se izogibamo z regularizacijo. Regularizacija L2 tudi tu prišteje kriterijski funkciji vsoto kvadratov uteži v nevronski mreži, s tem da se uteži na povezavah iz konstantnih enot mreže ne regularizira.
+
+
+

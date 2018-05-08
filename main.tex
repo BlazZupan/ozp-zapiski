@@ -22,6 +22,10 @@
 \floatname{algorithm}{Algoritem}
 \usepackage{algorithmic} % for algorithms
 
+% drawing
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
 \usepackage{amsopn}
 \DeclareMathOperator*{\argmax}{\arg\,\max}
 
@@ -36,6 +40,8 @@
 \newcommand{\tr}{\intercal}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \newcommand{\vect}[1]{\boldsymbol{#1}}
+\newcommand{\matr}[1]{\mathbf{#1}}
+\newcommand{\rr}[2]{\mathbb{R}^2}
 
 \usepackage{color}
 \definecolor{light-gray}{gray}{0.95}
@@ -106,6 +112,7 @@ backgroundcolor=\color{light-gray}
 \include{projekcije}
 \include{ansambli}
 \include{mere-uspesnosti}
+\include{nevronske-mreze}
 
 \bibliographystyle{abbrv}
 \bibliography{library}
