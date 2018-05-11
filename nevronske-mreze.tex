@@ -125,7 +125,7 @@ W^{(l)} = \begin{pmatrix} 1 & 0 \\ 1 & 1 \\ 0 & 0 \\ 0 & 1 \end{pmatrix}
 \[
 \begin{pmatrix}1 & 0 & 1 & 2\end{pmatrix}
 \begin{pmatrix} 1 & 0 \\ 1 & 1 \\ 0 & 0 \\ 0 & 1 \end{pmatrix} = 
-\begin{pmatrix}1 \\ 2\end{pmatrix}
+\begin{pmatrix}1 & 2\end{pmatrix}      % \begin{pmatrix}1 \\ 2\end{pmatrix} 
 \]
 
 \section{Učenje}
@@ -194,7 +194,7 @@ Na tem, zadnjem nivoju, imamo dve uteži, $w_0^{(L)}$ in $w_1^{(L)}$. Izračunaj
 \begin{eqnarray}
 \pd{z^{(L)}}{w_1^{(L)}} & = & a^{(L-1)}, \\
 \pd{a^{(L)}}{z^{(L)}} & = & \sigma'(z^{(L)}), \\
-\pd{J}{a^{(L)}} & = & 2(a^{(L)})-y).
+\pd{J}{a^{(L)}} & = & 2(a^{(L)}-y).    % \pd{J}{a^{(L)}} & = & 2(a^{(L)})-y).
 \end{eqnarray}
 \noindent Tu je $\sigma'$ odvod aktivacijske funkcije po njeni edini spremenljivki. V primeru logistične aktivacijske funkcije ta odvod že poznamo:
 \begin{equation}
@@ -249,7 +249,7 @@ Izpišimo torej splošne enačbe za izračun gradientov po tem postopku, in pri 
   \pd{J}{w_1^{(l)}} & = & \pd{z^{(l)}}{w_1^{(l)}}\ \pd{a^{(l)}}{z^{(l)}}\ \pd{J}{a^{(l)}} \\
   \pd{J}{a^{(l)}} & = & \left\{
     \begin{array}{ll}
-      2(a^{(L)})-y), & l=L \\
+      2(a^{(L)}-y), & l=L \\   %2(a^{(L)})-y), & l=L \\
       \displaystyle
       \pd{z^{(l+1)}}{a^{(l)}}\ \pd{a^{(l+1)}}{z^{(l+1)}}\ \pd{J}{a^{(l+1)}}, 
       & l=1,2,\ldots,L-1
@@ -261,7 +261,7 @@ Izpišimo torej splošne enačbe za izračun gradientov po tem postopku, in pri 
 
 Zgoraj smo privzeli, da imamo samo en učni primer. Za množico primerov je kriterijska funkcija lahko:
 \begin{equation}
-J={2\over m}\sum_{i=1}^m \big( \hat{y}^{(i)} - y^{(i)}\big)^2
+J={1\over 2m}\sum_{i=1}^m \big( \hat{y}^{(i)} - y^{(i)}\big)^2  % J={2\over m}\sum_{i=1}^m \big( \hat{y}^{(i)} - y^{(i)}\big)^2
 \end{equation}
 \noindent kjer smo tokrat z $\hat{y}^{(i)}$ zapisali ocenjeno vrednost razredne spremenljivke za $i$-ti primer $x^{(i)}$ in z $y^{(i)}$ njeno pravo vrednost. Skladno s to kriterijsko funkcijo se pri izračunu gradientov spremeni le $\pd{J}{a^{(L)}}$, ki je sedaj enak povprečni vrednosti napake:
 \begin{equation}
@@ -322,6 +322,3 @@ kjer je $\circ$ oznaka za Hadamardov produkt, oziroma produkt po elementih dveh 
 \end{eqnarray}
 
 V implementaciji nastavimo matrike uteži na neko manjšo, neničelno vrednost (na primer med 0 in 0.1) in potem z gradientnim sestopom izračunamo vrednost uteži, ki za dani nabor učnih podatkov minimizira kriterijsko funkcijo. Prileganju učnim podatkom se izogibamo z regularizacijo. Regularizacija L2 tudi tu prišteje kriterijski funkciji vsoto kvadratov uteži v nevronski mreži, s tem da se uteži na povezavah iz konstantnih enot mreže ne regularizira.
-
-
-
